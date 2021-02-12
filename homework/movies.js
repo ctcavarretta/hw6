@@ -18,6 +18,14 @@ window.addEventListener('DOMContentLoaded', async function(event) {
   // console to ensure you've got good data
   // ⬇️ ⬇️ ⬇️
 
+  let apiKey = '8720ff01219b33c8a1581dedde14680a'
+  let db = firebase.firestore()
+  let movieDB = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&language=en-US`)
+  let movieJson = await movieDB.json()
+  let movies = movieJson.results
+  console.log(movies)
+
+
   // ⬆️ ⬆️ ⬆️ 
   // End Step 1
   
@@ -34,6 +42,33 @@ window.addEventListener('DOMContentLoaded', async function(event) {
   // </div>
   // ⬇️ ⬇️ ⬇️
 
+  for (let i=0; i<movies.length; i++) {
+    let movieID = movies[i].id
+    let movieTitle = movies[i].title
+    let movieOverview = movies[i].overview 
+    let moviePic = movies[i].poster_path
+
+    document.querySelector('.movies').insertAdjacentHTML('beforeend', `
+    <div class="movie-${movieID} w-1/5 p-4">
+     <img src="https://image.tmdb.org/t/p/w500/${moviePic}" class="w-full">
+     <a href="#" class="watched-button block text-center text-white bg-green-500 mt-4 px-4 py-2 rounded">I've watched this!</a>
+    </div>
+   `)}
+    
+    let querySnapshot = await db.collection('moviesFS').get()
+    let moviesFS = querySnapshot.docs
+    
+    for (let i=0; i<moviesFS.length; i++) {
+      let movieData = moviesFS[i].data()
+      let movieID = movieData.ID
+      let movieWatched = movieData.Watched
+      console.log(movieID)
+      console.log(movieWatched)
+        if (movieWatched = 'Yes') {
+          document.querySelector(`.movie-${movieID}`).classList.add('opacity-20')
+        }
+    }
+
   // ⬆️ ⬆️ ⬆️ 
   // End Step 2
 
@@ -49,6 +84,28 @@ window.addEventListener('DOMContentLoaded', async function(event) {
   //   to remove the class if the element already contains it.
   // ⬇️ ⬇️ ⬇️
 
+    for (let i=0; i<movies.length; i++) {
+      let movieID = movies[i].id
+      let moviePic = movies[i].poster_path
+      
+      document.querySelector('.movies').insertAdjacentHTML('beforeend', `
+        <div class="movie-${movieID} w-1/5 p-4 ">
+           <img src="https://image.tmdb.org/t/p/w500/${moviePic}" class="w-full">
+           <a href="#" class="watched-button block text-center text-white bg-green-500 mt-4 px-4 py-2 rounded">I've watched this!</a>
+        </div>
+      `)
+      let watchButton = document.querySelector(`.movie-${movieID}`)
+      watchButton.addEventListener('click', async function(event) {
+        event.preventDefault()
+        console.log(`The Movie with ID ${movieID} was clicked!`)
+        document.querySelector(`.movie-${movieID}`).classList.add('opacity-20')
+        db.collection('moviesFS').add({
+          ID: movieID,
+          Watched: 'Yes'
+        })
+      })
+      }
+      
   // ⬆️ ⬆️ ⬆️ 
   // End Step 3
 
